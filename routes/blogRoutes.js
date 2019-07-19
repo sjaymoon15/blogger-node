@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 const requireLogin = require('../middlewares/requireLogin');
 
+const redis = require("redis");
+const redisUrl = 'redis://127.0.0.1:6379';
+const client = redis.createClient(redisUrl);
+
+const {promisify} = require('util');
+const getAsync = promisify(client.get).bind(client);
+
 const Blog = mongoose.model('Blog');
 
 module.exports = app => {
@@ -9,13 +16,20 @@ module.exports = app => {
       _user: req.user.id,
       _id: req.params.id
     });
-
     res.send(blog);
   });
 
   app.get('/api/blogs', requireLogin, async (req, res) => {
-    const blogs = await Blog.find({ _user: req.user.id });
+    const cacheKey = `blogs_${req.user.id}`;
+    const cachedBlogs = await getAsync(cacheKey);
+    if (cachedBlogs) {
+      console.log('###   chached Blogs');
+      return res.send(JSON.parse(cachedBlogs));
+    } 
 
+    const blogs = await Blog.find({ _user: req.user.id })
+    client.set(cacheKey, JSON.stringify(blogs));
+    console.log('###   non cached')
     res.send(blogs);
   });
 

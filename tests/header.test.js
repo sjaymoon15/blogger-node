@@ -1,20 +1,17 @@
 // in puppeteer, Page represents one individual tab
-const puppeteer = require('puppeteer');
 const sesstionFactory = require('./factories/sessionFactory');
 const userFactory = require('./factories/userFactory');
-let browser, page;
+const Page = require('./helpers/page');
+
+let page;
 
 beforeEach(async () => {
-  // browser represents a browser window
-  browser = await puppeteer.launch({
-    headless: false
-  }); // puppeteer almost always async
-  page = await browser.newPage();
+  page = await Page.build();
   await page.goto('localhost:3000');
 });
 
 afterEach(async () => {
-  await browser.close();
+  await page.close();
 });
 
 test('The header has the correct text', async () => {

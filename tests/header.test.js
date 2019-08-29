@@ -1,6 +1,4 @@
 // in puppeteer, Page represents one individual tab
-const sesstionFactory = require('./factories/sessionFactory');
-const userFactory = require('./factories/userFactory');
 const Page = require('./helpers/page');
 
 let page;
@@ -26,14 +24,7 @@ test('Clicking login starts oauth flow', async () => {
 });
 
 test('When signed in, shows logout button', async () => {
-  const user = await userFactory(); //userFactory returns a Promise.
-  const { session, sig } = sesstionFactory(user);
-
-  await page.setCookie({ name: 'session', value: session });
-  await page.setCookie({ name: 'session.sig', value: sig });
-  await page.goto('localhost:3000'); // refreshes the page. mimicking sign in.
-  await page.waitFor('a[href="/auth/logout"]');
-
+  await page.login();
   const logoutText = await page.$eval(
     'a[href="/auth/logout"]',
     el => el.innerHTML
